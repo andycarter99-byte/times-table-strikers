@@ -4,7 +4,7 @@
   File:      TimesTableStrikers.html   Version 1.0
   Author:    Andy Carter, AndyC Consulting Ltd <andy@andycconsulting.co.uk>
   Created:   11/11/2026
-  Modified:  12/11/2026 09:00
+  Modified:  12/11/2026 10:30
   Copyright (c) 2026 AndyC Consulting Ltd. All rights reserved.
   Confidential: no copying, modifying or passing on without written permission,
   except as set out in the agreement under which it was supplied.
@@ -349,19 +349,21 @@ const TEAMS = {
 const YEARS = [ {label:"Year 2 fixtures", tables:[2,5,10]}, {label:"Year 3 fixtures", tables:[3,4,8]}, {label:"Year 4 fixtures", tables:[6,7,9,11,12]} ];
 const ORDER = [2,5,10,3,4,8,6,7,9,11,12];
 const KITS = ["stripes","#6cabdd","#1d4ed8","#e63946","#16a34a","#f59e0b","#7c3aed","#0f172a","#ec4899","#06b6d4","#ffffff"];
+// Each tip is worked through with the actual sum: t = the times table, n = the other number
 const TIPS = {
-  1:"Anything times 1 stays the same!",
-  2:"The 2s are doubles: 2 &times; 8 is 8 + 8.",
-  3:"Count up in 3s: 3, 6, 9, 12, 15&hellip;",
-  4:"Double it, then double again! 4 &times; 6: 6 &rarr; 12 &rarr; 24.",
-  5:"Fives always end in 5 or 0. They are half of the tens!",
-  6:"Do the 3s, then double. 6 &times; 7: 3 &times; 7 = 21, double it = 42.",
-  7:"Remember 5, 6, 7, 8: 56 = 7 &times; 8! Then 7 &times; 7 = 49.",
-  8:"Double, double, double! 8 &times; 3: 3 &rarr; 6 &rarr; 12 &rarr; 24.",
-  9:"Do ten lots, then take one lot away: 9 &times; 6 = 60 &minus; 6 = 54. The digits always add up to 9!",
-  10:"Tens: just put a 0 on the end. 10 &times; 7 = 70.",
-  11:"Up to 9, just write the number twice: 11 &times; 4 = 44. Then 110, 121, 132.",
-  12:"Ten lots plus two lots: 12 &times; 7 = 70 + 14 = 84."
+  1:(t,n)=>`Anything times 1 stays the same: ${t} &times; 1 = ${t}.`,
+  2:(t,n)=>`The 2s are doubles: ${n} + ${n} = ${2*n}.`,
+  3:(t,n)=>`Do 2 lots, then add 1 more lot: ${2*n} + ${n} = ${3*n}.`,
+  4:(t,n)=>`Double it, then double again: ${n} &rarr; ${2*n} &rarr; ${4*n}.`,
+  5:(t,n)=>`Do 10 lots, then halve it: 10 &times; ${n} = ${10*n}, and half of ${10*n} is ${5*n}.`,
+  6:(t,n)=>`Do 5 lots, then add 1 more lot: ${5*n} + ${n} = ${6*n}.`,
+  7:(t,n)=>`Do 5 lots and 2 lots, then add them: ${5*n} + ${2*n} = ${7*n}.`,
+  8:(t,n)=>`Double, double, double: ${n} &rarr; ${2*n} &rarr; ${4*n} &rarr; ${8*n}.`,
+  9:(t,n)=>`Do 10 lots, then take 1 lot away: ${10*n} &minus; ${n} = ${9*n}.`,
+  10:(t,n)=>`Tens: put a 0 on the end. ${n} becomes ${10*n}.`,
+  11:(t,n)=> n<=9 ? `Up to 9, just write the number twice: 11 &times; ${n} = ${11*n}.`
+                   : `Do 10 lots, then add 1 more lot: ${10*n} + ${n} = ${11*n}.`,
+  12:(t,n)=>`Do 10 lots, then add 2 lots: ${10*n} + ${2*n} = ${12*n}.`
 };
 const GOAL_LINES = ["GOAL! What a strike!","Top corner! GOAL!","Back of the net!","The crowd goes wild!","Unstoppable!","Get in! GOAL!","The keeper had no chance!"];
 const SAVE_LINES = ["Saved! Unlucky.","The keeper gets a glove to it!","So close! Saved.","Great save by the keeper."];
@@ -634,12 +636,13 @@ function showHelp(q){
   if(!G) return;
   $("padWrap").style.display = "none";
   $("helpFact").innerHTML = `${q.text} = <span style="color:var(--green)">${q.ans}</span>`;
-  const t = q.op==="div" ? q.a : (q.a >= q.b ? q.a : q.b);
+  // t = the table to count in (a 1 is never the table unless both are 1), n = how many lots
+  const t = q.op==="div" ? q.a : (q.a===1 ? q.b : q.a), n = q.op==="div" ? q.b : (t===q.a ? q.b : q.a);
   let tip = q.op==="div"
     ? `Think: how many ${q.a}s make ${q.a*q.b}? Because ${q.b} &times; ${q.a} = ${q.a*q.b}, the answer is ${q.b}.`
-    : (TIPS[t] || "");
+    : (n===1 ? TIPS[1](t,1) : TIPS[t] ? TIPS[t](t,n) : "");
   $("helpTip").innerHTML = tip;
-  const step = q.op==="div" ? q.a : t, n = q.op==="div" ? q.b : (t===q.a ? q.b : q.a);
+  const step = t;
   let chips = `<div style="width:100%;font-weight:700">Count up in ${step}s:</div>`;
   for(let i=1;i<=Math.max(n,1);i++) chips += `<span class="chip ${i===n?"end":"on"}">${step*i}</span>`;
   $("helpChips").innerHTML = n>0 ? chips : "";
