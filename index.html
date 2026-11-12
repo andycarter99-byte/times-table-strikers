@@ -4,7 +4,7 @@
   File:      TimesTableStrikers.html   Version 1.0
   Author:    Andy Carter, AndyC Consulting Ltd <andy@andycconsulting.co.uk>
   Created:   11/11/2026
-  Modified:  12/11/2026 15:30
+  Modified:  12/11/2026 17:20
   Copyright (c) 2026 AndyC Consulting Ltd. All rights reserved.
   Confidential: no copying, modifying or passing on without written permission,
   except as set out in the agreement under which it was supplied.
@@ -448,6 +448,12 @@
       <button data-v="speak">&#128266; Read out loud</button>
       <button data-v="look">&#128064; Look, cover, write (shown for 3 seconds)</button>
     </div>
+    <div class="lbl">Spelling voice</div>
+    <div class="opt" style="align-items:center">
+      <select id="setVoice" style="font-size:17px;padding:8px 10px;border-radius:10px;border:3px solid #cbd5e1;max-width:100%"></select>
+      <button id="testVoice">&#128266; Test</button>
+    </div>
+    <p class="note" id="voiceNote"></p>
     <div class="lbl">Clock in The Season (times tables)</div>
     <div class="opt" id="setSpeed">
       <button data-v="0">No clock</button>
@@ -955,18 +961,63 @@ function makeSpellQuestion(gen, recent){
 /* ---------- Saying the word (browser speech, British voice if there is one) ---------- */
 const canSpeak = () => "speechSynthesis" in window && window.speechSynthesis.getVoices().length > 0;
 if("speechSynthesis" in window) window.speechSynthesis.getVoices();
-function pickVoice(){
-  const vs = window.speechSynthesis.getVoices();
-  return vs.find(v => /en[-_]GB/i.test(v.lang) && /natural|online|sonia|libby|hazel|serena|kate|female/i.test(v.name))
-      || vs.find(v => /en[-_]GB/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null;
+// Score each English voice: British first, then the neural "Natural"/"Online" voices (Edge, Windows 11),
+// then Google's and Apple's better voices; the old robotic desktop voices come last
+function voiceScore(v){
+  let s = 0; const n = v.name;
+  if(/en[-_]GB/i.test(v.lang)) s += 100; else if(/^en/i.test(v.lang)) s += 10; else return -1;
+  if(/natural/i.test(n)) s += 60;
+  if(/online/i.test(n)) s += 30;
+  if(/google/i.test(n)) s += 25;
+  if(/premium|enhanced|siri/i.test(n)) s += 25;
+  if(/sonia|libby|maisie|ryan|thomas|bella|hollie|serena|kate|daniel|stephanie/i.test(n)) s += 8;
+  if(/desktop|hazel|george|susan/i.test(n)) s -= 20;
+  return s;
 }
+const englishVoices = () => window.speechSynthesis.getVoices().filter(v => voiceScore(v) >= 0).sort((a,b) => voiceScore(b) - voiceScore(a));
+function pickVoice(){
+  const vs = englishVoices();
+  return (save.voice && vs.find(v => v.name===save.voice)) || vs[0] || null;
+}
+// Recorded voice (Lily): one MP3 per word, "word ... sentence ... word", in audio/<list>-<word>.mp3.
+// One reusable audio element, unlocked on a tap, so tablets allow it to play later without a tap.
+const RECORDED = "__recorded";
+const useRecorded = () => !save.voice || save.voice===RECORDED;
+const VO = new Audio(); VO.preload = "auto";
+function unlockVO(){
+  if(VO.dataset.unlocked) return;
+  VO.dataset.unlocked = "1"; VO.muted = true; VO.src = "audio/y1-the.mp3";
+  const p = VO.play(); const done = () => { VO.pause(); VO.muted = false; };
+  if(p && p.then) p.then(done, done); else done();
+}
+function stopVoice(){ try{ VO.pause(); }catch(e){} if("speechSynthesis" in window) window.speechSynthesis.cancel(); }
+function playRecorded(q, onFail){
+  if(!q.list){ onFail(); return; }
+  stopVoice();
+  let failed = false; const fail = () => { if(failed) return; failed = true; VO.onerror = null; onFail(); };
+  VO.muted = false; VO.onerror = fail;
+  VO.src = `audio/${q.list}-${q.word.toLowerCase()}.mp3`;
+  const p = VO.play(); if(p && p.catch) p.catch(err => { if(err && err.name !== "AbortError") fail(); });
+}
+// Say the word: Lily's recording if chosen, otherwise (or if it can't load) the device's own voice
 function sayWord(q){
+  if(useRecorded()){
+    playRecorded(q, () => { if(!speakWithDevice(q) && G && G.q===q && !G.copying) showWordBriefly(q, 3000); });
+    return true;
+  }
+  return speakWithDevice(q);
+}
+// Device voice: the word, a short pause, the sentence at normal pace, then the word again
+function speakWithDevice(q){
   if(!canSpeak()) return false;
-  const s = window.speechSynthesis, v = pickVoice(); s.cancel();
-  [q.word, q.sentence, q.word].forEach(t => { const u = new SpeechSynthesisUtterance(t); u.lang = "en-GB"; if(v) u.voice = v; u.rate = 0.85; s.speak(u); });
+  const s = window.speechSynthesis, v = pickVoice(), natural = v && /natural|online|google|premium|enhanced/i.test(v.name);
+  s.cancel();
+  [[q.word, natural ? 0.9 : 0.85], [q.sentence, 1], [q.word, natural ? 0.9 : 0.85]].forEach(([t, rate]) => {
+    const u = new SpeechSynthesisUtterance(t); u.lang = v ? v.lang : "en-GB"; if(v) u.voice = v; u.rate = rate; u.pitch = 1; s.speak(u);
+  });
   return true;
 }
-const lookMode = () => save.spellMode==="look" || !canSpeak();
+const lookMode = () => save.spellMode==="look" || (!useRecorded() && !canSpeak());
 function showWordBriefly(q, ms){
   G.locked = true; G.looking = true;
   const a = $("sans"); a.textContent = q.word; a.className = "sans look";
@@ -1034,6 +1085,7 @@ function startGame(opts){
   G = Object.assign({kind:"maths", qn:0, goals:0, saves:0, streak:0, missed:[], recent:[], input:"", locked:true, over:false, copying:false}, opts);
   ac(); // unlock audio on this click
   const sp = G.kind==="spell";
+  if(sp) unlockVO();
   $("qmaths").style.display = sp ? "none" : ""; $("qspell").style.display = sp ? "block" : "none";
   $("keypad").style.display = sp ? "none" : ""; $("letters").style.display = sp ? "" : "none";
   $("hear").innerHTML = lookMode() ? "&#128064; Show me again" : "&#128266; Hear it again";
@@ -1144,7 +1196,7 @@ function shoot(){
 function resolveShot(ok, timedOut){
   G.locked = true; stopTimer();
   const q = G.q, sp = G.kind==="spell";
-  if(sp){ recordWord(q.word, ok); if("speechSynthesis" in window) window.speechSynthesis.cancel(); }
+  if(sp){ recordWord(q.word, ok); stopVoice(); }
   else recordFact(q.a, q.b, ok);
   const dot = document.querySelectorAll(".dot")[G.qn-1];
   dot.classList.remove("now"); dot.classList.add(ok ? "g" : "s");
@@ -1408,9 +1460,24 @@ function renderSettings(){
   $("keeperLabel").textContent = "(" + KEEPER_NAMES[kk] + ")";
   $("setSeasonOps").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === (save.seasonOps||"mix")));
   $("setSpellMode").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === (save.spellMode||"speak")));
+  renderVoices();
 }
+function renderVoices(){
+  const sel = $("setVoice"); if(!sel) return;
+  const vs = ("speechSynthesis" in window) ? englishVoices() : [];
+  const cur = useRecorded() ? null : pickVoice();
+  sel.innerHTML = `<option value="${RECORDED}" ${useRecorded() ? "selected" : ""}>Lily (recorded, most natural)</option>`
+    + vs.map(v => `<option value="${esc(v.name)}" ${cur && v.name===cur.name ? "selected" : ""}>${esc(v.name.replace(/^Microsoft /,""))} (this device)</option>`).join("");
+  $("voiceNote").textContent = useRecorded()
+    ? "Lily is a recorded British voice and sounds the same on every device. The other voices come from this device."
+    : "This voice comes from the device. Lily usually sounds more natural.";
+}
+const SAMPLE = {word:"because", sentence:"I am tired because I ran a lot.", list:"y2"};
+if("speechSynthesis" in window) window.speechSynthesis.addEventListener("voiceschanged", () => { if($("s-settings").classList.contains("active")) renderVoices(); });
+$("setVoice").onchange = e => { save.voice = e.target.value; persist(); renderVoices(); sayWord(SAMPLE); };
+$("testVoice").onclick = () => sayWord(SAMPLE);
 $("setSpellMode").onclick = e => { const b = e.target.closest("button"); if(!b) return; save.spellMode = b.dataset.v; persist(); SFX.key(); renderSettings();
-  if(save.spellMode==="speak") sayWord({word:"Hello", sentence:"This is how the spelling words will sound."}); };
+  if(save.spellMode==="speak") sayWord(SAMPLE); };
 $("keeperKits").onclick = e => { const b = e.target.closest("button"); if(!b) return; save.keeperKit = b.dataset.k; persist(); SFX.key(); renderSettings(); };
 $("setSeasonOps").onclick = e => { const b = e.target.closest("button"); if(!b) return; save.seasonOps = b.dataset.v; persist(); SFX.key(); renderSettings(); };
 $("setName").addEventListener("input", e => { save.name = e.target.value.trim(); persist(); });
@@ -1420,7 +1487,7 @@ $("resetAll").onclick = () => {
   if(confirm("Delete all trophies, scores and progress? This can't be undone.")){
     // wipe scores and trophies only; keep name, kits and other choices
     const keep = {name:save.name, kit:save.kit, keeperKit:save.keeperKit, seasonOps:save.seasonOps, speed:save.speed, sound:save.sound,
-                  subject:save.subject, spellMode:save.spellMode};
+                  subject:save.subject, spellMode:save.spellMode, voice:save.voice};
     save = Object.assign(defaults(), keep); persist(); renderSettings(); alert("Progress reset.");
   }
 };
