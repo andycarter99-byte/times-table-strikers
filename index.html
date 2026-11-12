@@ -4,7 +4,7 @@
   File:      TimesTableStrikers.html   Version 1.0
   Author:    Andy Carter, AndyC Consulting Ltd <andy@andycconsulting.co.uk>
   Created:   11/11/2026
-  Modified:  12/11/2026 12:30
+  Modified:  12/11/2026 13:30
   Copyright (c) 2026 AndyC Consulting Ltd. All rights reserved.
   Confidential: no copying, modifying or passing on without written permission,
   except as set out in the agreement under which it was supplied.
@@ -48,7 +48,11 @@
   .menubtn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.3)}
   .m1{background:linear-gradient(135deg,#16a34a,#15803d)} .m2{background:linear-gradient(135deg,#2563eb,#1e40af)}
   .m3{background:linear-gradient(135deg,#f59e0b,#d97706)} .m4{background:linear-gradient(135deg,#9333ea,#7e22ce)}
-  .m5{background:linear-gradient(135deg,#64748b,#475569)}
+  .m5{background:linear-gradient(135deg,#64748b,#475569)} .m6{background:linear-gradient(135deg,#0d9488,#0f766e)}
+  .guide{font-size:17px;line-height:1.5} .guide h3{font-size:22px;margin:18px 0 6px} .guide h3:first-child{margin-top:0}
+  .guide p{margin:6px 0} .guide li{margin:5px 0}
+  .guide table{border-collapse:collapse;width:100%;margin:6px 0} .guide th,.guide td{border:1px solid #cbd5e1;padding:8px;text-align:left;vertical-align:top}
+  .guide th{background:#f1f5f9}
   .namebox{display:flex;gap:10px;justify-content:center;align-items:center;margin:12px 0 22px;flex-wrap:wrap}
   .namebox input{font-size:24px;padding:10px 14px;border-radius:12px;border:3px solid var(--gold);width:260px;text-align:center;font-weight:700}
   .big{font-size:22px;font-weight:800;border:0;border-radius:14px;padding:12px 22px;color:#fff;background:var(--green);box-shadow:0 5px 0 rgba(0,0,0,.25)}
@@ -187,6 +191,53 @@
     <button class="menubtn m3" data-go="cup">&#127942; The Big Cup Final<small>25 shots, 6 seconds each, all tables 2 to 12. Just like the Year 4 check!</small></button>
     <button class="menubtn m4" data-go="cabinet">&#127941; Trophy Cabinet<small>See your trophies and which sums are tricky.</small></button>
     <button class="menubtn m5" data-go="settings">&#9881;&#65039; Settings<small>Name, kit colour, clock speed and grown-ups' notes.</small></button>
+    <button class="menubtn m6" data-go="guide">&#128214; Grown-ups' guide<small>How the game works and how to help at home.</small></button>
+  </div>
+</section>
+
+<!-- GROWN-UPS' GUIDE (from the parents' guide doc; the player's name is filled in from Settings) -->
+<section class="screen" id="s-guide">
+  <div class="backrow"><h2>&#128214; Grown-ups' guide</h2><button class="back" data-go="home">&larr; Back</button></div>
+  <div class="card guide">
+    <h3>What it is</h3>
+    <p>Times Table Strikers is a football game that helps <span class="kid">your child</span> learn times tables. Every sum answered right is a penalty that goes in. Every sum answered wrong is saved by the keeper.</p>
+    <p>It follows the National Curriculum for England, from the Year 2 tables up to 12 &times; 12. It is free, with no adverts, no sign-up and nothing to install.</p>
+
+    <h3>Getting started</h3>
+    <ol>
+      <li>Open <b>andycarter99-byte.github.io/times-table-strikers</b> in the web browser on a computer, tablet or phone.</li>
+      <li>Type the player's name in the name box and press <b>That's me!</b></li>
+      <li>The kit starts as blue-and-white stripes. To change it, for example to sky blue, go to <b>Settings</b> and tap a colour.</li>
+      <li>Optional: on a tablet or phone, choose <b>Add to Home Screen</b> from the browser's menu. That gives an icon to tap, like an app.</li>
+    </ol>
+    <p>Tap the on-screen number pad, or type the answer on a keyboard and press Enter to shoot.</p>
+
+    <h3>The four parts of the game</h3>
+    <div style="overflow-x:auto"><table>
+      <tr><th>Part</th><th>What happens</th><th>Clock</th></tr>
+      <tr><td><b>The Season</b></td><td>A 10-penalty match against a team for each times table, with times and divide sums. Settings can change this to times only or divide only. Bronze for 8 goals, silver for 9 and gold for 10. The tables are in school order: Year 2 (2, 5, 10), Year 3 (3, 4, 8), Year 4 (6, 7, 9, 11, 12).</td><td>8 seconds a sum (change in Settings)</td></tr>
+      <tr><td><b>Training Ground</b></td><td>Pick the tables to practise. After a miss it shows the answer, a tip worked through for that sum, and a count-up strip.</td><td>None</td></tr>
+      <tr><td><b>The Big Cup Final</b></td><td>25 sums from all tables 2 to 12, mixed up.</td><td>6 seconds a sum</td></tr>
+      <tr><td><b>Trophy Cabinet</b></td><td>Trophies, best Cup Final score, and a 12 &times; 12 grid showing which sums are known.</td><td>&ndash;</td></tr>
+    </table></div>
+    <p>After each match, <b>Practise these</b> gives another go at the sums that were missed. The blue <b>Main menu</b> button goes back to the start.</p>
+
+    <h3>How you can help</h3>
+    <ul>
+      <li><b>Little and often works best.</b> One match a day, about 5 minutes, does more than a long session once a week.</li>
+      <li><b>Check the Trophy Cabinet grid now and then.</b> Green means known, yellow means getting there, red means tricky. The game already asks the red ones more often.</li>
+      <li><b>Start with The Season.</b> Work through the fixtures in order; the next one is marked PLAY NEXT. If the clock is a worry, set it to No clock in Settings.</li>
+      <li><b>Save the Cup Final for when <span class="kid">your child</span> is confident.</b> In June of Year 4, every child takes the Multiplication Tables Check: 25 sums, 6 seconds each. The Cup Final uses the same format, so there are no surprises.</li>
+    </ul>
+
+    <h3>Good to know</h3>
+    <ul>
+      <li><b>Progress is saved on each device.</b> Trophies on the tablet won't show on the laptop, so it's simplest to stick to one. Clearing the browser's history or data will wipe them.</li>
+      <li><b>Updates arrive by themselves.</b> If anything changes, refreshing the page picks it up, and the trophies stay.</li>
+      <li><b>Sound</b> can be turned on or off with the speaker button at the top. <b>Full screen</b> is next to it. In Settings you can also change the kit and the goalkeeper's shirt colour.</li>
+      <li><b>Problems or ideas?</b> Let Andy know and the game can be changed.</li>
+    </ul>
+    <button class="big blue" data-go="home">&#127968; Main menu</button>
   </div>
 </section>
 
@@ -194,7 +245,7 @@
 <section class="screen" id="s-season">
   <div class="backrow"><h2>&#9917; The Season</h2><button class="back" data-go="home">&larr; Back</button></div>
   <div id="fixtures"></div>
-  <p class="note" style="color:#cbd5e1">Score 8 goals out of 10 to win a bronze trophy, 9 for silver and 10 for gold. Each match has times and divide questions for that table.</p>
+  <p class="note" style="color:#cbd5e1">Score 8 goals out of 10 to win a bronze trophy, 9 for silver and 10 for gold. Each match uses the sums chosen in Settings: times and divide to start with.</p>
 </section>
 
 <!-- TRAINING -->
@@ -340,6 +391,7 @@
       The game remembers which sums he gets wrong and asks those more often. The Trophy Cabinet shows a 12 &times; 12 grid of what he knows.
       Progress is saved in the web browser on whichever computer or tablet he plays on.
     </p>
+    <button class="big" data-go="guide" style="margin-top:8px">&#128214; Read the full grown-ups' guide</button>
     <button class="big red" id="resetAll" style="margin-top:8px">Reset all progress</button>
   </div>
 </section>
@@ -453,6 +505,7 @@ function show(name){
   if(name==="season") renderSeason();
   if(name==="cabinet") renderCabinet();
   if(name==="settings") renderSettings();
+  if(name==="guide") document.querySelectorAll("#s-guide .kid").forEach(s => s.textContent = save.name || "your child");
   if(name==="cup") $("cupBest").textContent = save.cupBest==null ? "" : "Your best score: " + save.cupBest + " out of 25";
   window.scrollTo(0,0);
 }
