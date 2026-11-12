@@ -4,7 +4,7 @@
   File:      TimesTableStrikers.html   Version 1.0
   Author:    Andy Carter, AndyC Consulting Ltd <andy@andycconsulting.co.uk>
   Created:   11/11/2026
-  Modified:  12/11/2026 11:15
+  Modified:  12/11/2026 12:30
   Copyright (c) 2026 AndyC Consulting Ltd. All rights reserved.
   Confidential: no copying, modifying or passing on without written permission,
   except as set out in the agreement under which it was supplied.
@@ -316,6 +316,14 @@
     </div>
     <div class="lbl">Kit colour</div>
     <div class="kits" id="kits"></div>
+    <div class="lbl">Goalkeeper's shirt <span id="keeperLabel" style="font-weight:600;color:var(--muted)"></span></div>
+    <div class="kits" id="keeperKits"></div>
+    <div class="lbl">Sums in The Season</div>
+    <div class="opt" id="setSeasonOps">
+      <button data-v="mul">&times; Times only</button>
+      <button data-v="div">&divide; Divide only</button>
+      <button data-v="mix">Times and divide</button>
+    </div>
     <div class="lbl">Clock in The Season</div>
     <div class="opt" id="setSpeed">
       <button data-v="0">No clock</button>
@@ -375,7 +383,12 @@ const KEY = "tts_save_v1";
 const kitCss = k => k==="stripes" ? "repeating-linear-gradient(90deg,#0e63ad 0 6px,#fff 6px 12px)" : k;
 const kitSvg = k => k==="stripes" ? "url(#stripeKit)" : k;
 const kitPlain = k => k==="stripes" ? "#0e63ad" : k;
-function defaults(){ return {name:"",kit:"stripes",sound:true,speed:8,facts:{},badges:{},cupBest:null,goals:0,games:0}; }
+// Goalkeeper shirt: "team" = each opponent's own colour, otherwise a fixed colour
+const KEEPER_KITS = ["team","#22c55e","#facc15","#f97316","#ec4899","#e63946","#7c3aed","#6cabdd","#111827","#94a3b8"];
+const KEEPER_NAMES = {team:"each team's own colour","#22c55e":"green","#facc15":"yellow","#f97316":"orange","#ec4899":"pink",
+  "#e63946":"red","#7c3aed":"purple","#6cabdd":"sky blue","#111827":"black","#94a3b8":"grey"};
+const keeperCol = () => save.keeperKit && save.keeperKit!=="team" ? save.keeperKit : (G ? G.oppCol : "#b91c1c");
+function defaults(){ return {keeperKit:"team",seasonOps:"mix",name:"",kit:"stripes",sound:true,speed:8,facts:{},badges:{},cupBest:null,goals:0,games:0}; }
 function load(){ try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s) return Object.assign(defaults(), s); }catch(e){} return defaults(); }
 let save = load();
 function persist(){ try{ localStorage.setItem(KEY, JSON.stringify(save)); }catch(e){} }
@@ -486,7 +499,7 @@ function renderSeason(){
 }
 function startSeasonMatch(t){
   startGame({ mode:"season", table:t, total:10, timeLimit:+save.speed, help:true,
-    opp:TEAMS[t].name, oppCol:TEAMS[t].col, gen:{tables:[t], ops:"mix", bMin:1} });
+    opp:TEAMS[t].name, oppCol:TEAMS[t].col, gen:{tables:[t], ops:save.seasonOps||"mix", bMin:1} });
 }
 
 /* ---------- Training ---------- */
@@ -544,7 +557,7 @@ function startGame(opts){
   G = Object.assign({qn:0, goals:0, saves:0, streak:0, missed:[], recent:[], input:"", locked:true, over:false}, opts);
   ac(); // unlock audio on this click
   $("sbName").textContent = displayName(); $("sbKit").style.background = kitCss(save.kit);
-  $("sbOpp").textContent = G.opp; $("sbOppKit").style.background = G.oppCol;
+  $("sbOpp").textContent = G.opp; $("sbOppKit").style.background = keeperCol();
   $("timer").classList.toggle("off", !G.timeLimit);
   let d = ""; for(let i=0;i<G.total;i++) d += `<div class="dot"></div>`; $("dots").innerHTML = d;
   drawPitch();
@@ -684,7 +697,7 @@ function finish(){
   const last = G;
   $("rPractise").onclick = () => startGame({ mode:"training", total:Math.min(10, Math.max(5, uniq.length*2)), timeLimit:0, help:true,
     opp:"Training keeper", oppCol:"#f59e0b", gen:{focus:uniq} });
-  $("rAgain").onclick = () => startGame({ mode:last.mode, table:last.table, total:last.total, timeLimit: last.mode==="season" ? +save.speed : last.timeLimit,
+  $("rAgain").onclick = () => last.mode==="season" ? startSeasonMatch(last.table) : startGame({ mode:last.mode, table:last.table, total:last.total, timeLimit: last.mode==="season" ? +save.speed : last.timeLimit,
     help:last.help, opp:last.opp, oppCol:last.oppCol, gen:last.gen });
   show("results");
   if(s >= n*0.8){ SFX.fanfare(); confetti(); } else SFX.whistle();
@@ -714,8 +727,8 @@ function drawPitch(){
     <g id="keeper">
       <rect x="191" y="117" width="7" height="18" fill="#222"/><rect x="202" y="117" width="7" height="18" fill="#222"/>
       <rect x="189" y="108" width="22" height="11" fill="#111"/>
-      <rect x="170" y="86" width="20" height="7" rx="3" fill="${G?G.oppCol:"#b91c1c"}"/><rect x="210" y="86" width="20" height="7" rx="3" fill="${G?G.oppCol:"#b91c1c"}"/>
-      <rect x="186" y="84" width="28" height="27" rx="6" fill="${G?G.oppCol:"#b91c1c"}" stroke="#fff" stroke-width="1"/>
+      <rect x="170" y="86" width="20" height="7" rx="3" fill="${keeperCol()}"/><rect x="210" y="86" width="20" height="7" rx="3" fill="${keeperCol()}"/>
+      <rect x="186" y="84" width="28" height="27" rx="6" fill="${keeperCol()}" stroke="#fff" stroke-width="1"/>
       <circle cx="168" cy="89" r="5.5" fill="#facc15"/><circle cx="232" cy="89" r="5.5" fill="#facc15"/>
       <circle cx="200" cy="74" r="9" fill="#e0ac69"/><path d="M191 72 Q200 60 209 72 Z" fill="#3b2a1a"/>
     </g>
@@ -811,13 +824,22 @@ function renderSettings(){
   $("setName").value = save.name;
   $("kits").innerHTML = KITS.map(k => `<button data-k="${k}" class="${k===save.kit?"on":""}" style="background:${kitCss(k)}" title="${k==="stripes"?"Blue and white stripes":k==="#6cabdd"?"Sky blue":""}"></button>`).join("");
   $("setSpeed").querySelectorAll("button").forEach(b => b.classList.toggle("on", +b.dataset.v === +save.speed));
+  const kk = save.keeperKit || "team";
+  $("keeperKits").innerHTML = KEEPER_KITS.map(k => `<button data-k="${k}" class="${k===kk?"on":""}" title="${KEEPER_NAMES[k]}"
+    style="background:${k==="team" ? "conic-gradient(#e63946,#f59e0b,#10b981,#0ea5e9,#7c3aed,#e63946)" : k}"></button>`).join("");
+  $("keeperLabel").textContent = "(" + KEEPER_NAMES[kk] + ")";
+  $("setSeasonOps").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === (save.seasonOps||"mix")));
 }
+$("keeperKits").onclick = e => { const b = e.target.closest("button"); if(!b) return; save.keeperKit = b.dataset.k; persist(); SFX.key(); renderSettings(); };
+$("setSeasonOps").onclick = e => { const b = e.target.closest("button"); if(!b) return; save.seasonOps = b.dataset.v; persist(); SFX.key(); renderSettings(); };
 $("setName").addEventListener("input", e => { save.name = e.target.value.trim(); persist(); });
 $("kits").onclick = e => { const b = e.target.closest("button"); if(!b) return; save.kit = b.dataset.k; persist(); SFX.key(); renderSettings(); };
 $("setSpeed").onclick = e => { const b = e.target.closest("button"); if(!b) return; save.speed = +b.dataset.v; persist(); SFX.key(); renderSettings(); };
 $("resetAll").onclick = () => {
   if(confirm("Delete all trophies, scores and progress? This can't be undone.")){
-    const keepName = save.name, keepKit = save.kit; save = defaults(); save.name = keepName; save.kit = keepKit; persist(); renderSettings(); alert("Progress reset.");
+    // wipe scores and trophies only; keep name, kits and other choices
+    const keep = {name:save.name, kit:save.kit, keeperKit:save.keeperKit, seasonOps:save.seasonOps, speed:save.speed, sound:save.sound};
+    save = Object.assign(defaults(), keep); persist(); renderSettings(); alert("Progress reset.");
   }
 };
 
